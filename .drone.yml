@@ -1,0 +1,65 @@
+_include: https://gitea.msqu.de/devops/build_scripts/raw/branch/main/drone/AnsibleTesting.yml
+
+kind: pipeline
+name: preflight
+
+steps:
+
+  - <<: *AnsibleTestingAnsibleLint
+
+  - <<: *AnsibleTestingShellcheck
+
+  - <<: *AnsibleTestingYamllint
+
+---
+_include: https://gitea.msqu.de/devops/build_scripts/raw/branch/main/drone/Molecule.yml
+
+kind: pipeline
+name: molecule
+
+depends_on:
+  - preflight
+
+steps:
+
+  - <<: *GitChanged
+
+  - <<: *Molecule
+    name: unit_debian-12
+    environment:
+      <<: *global-variables
+      MOLECULE_DISTRO: "debian-12"
+      TEST_TYPE: unit
+
+  - <<: *Molecule
+    name: unit_ubuntu-2204
+    environment:
+      <<: *global-variables
+      MOLECULE_DISTRO: "ubuntu-22.04"
+      TEST_TYPE: unit
+
+  - <<: *Molecule
+    name: integration_debian-12
+    environment:
+      <<: *global-variables
+      MOLECULE_DISTRO: "debian-12"
+      TEST_TYPE: integration
+
+  - <<: *Molecule
+    name: integration_ubuntu-2204
+    environment:
+      <<: *global-variables
+      MOLECULE_DISTRO: "ubuntu-22.04"
+      TEST_TYPE: integration
+
+  - <<: *Molecule
+    name: molecule_gc
+    environment:
+      <<: *global-variables
+      MOLECULE_DISTRO: "debian-12"
+      HCLOUD_SERVER_STATE: absent
+      TEST_TYPE: destroy
+    when:
+      status:
+        - success
+        - failure
