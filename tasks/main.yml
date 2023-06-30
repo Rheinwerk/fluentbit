@@ -86,11 +86,3 @@
   notify: Restart Fluentbit service
   tags:
     - fluent-bit
-
-- name: Ensure fluentbit service is enabled and started
-  ansible.builtin.service:
-    name: "{{ fluentbit_service_name }}"
-    state: started
-    enabled: true
-  tags:
-    - fluent-bit
