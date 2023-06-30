@@ -1,14 +1,18 @@
 ---
 
-- name: test lua_script
+- name: Test lua_script
   ansible.builtin.assert:
     that:
       - lua_script.name is defined
     quiet: true
+  tags:
+    - fluent-bit
 
-- name: copy lua script
-  copy:
+- name: Copy lua script
+  ansible.builtin.copy:
     dest: "/etc/fluent-bit/{{ lua_script.name }}"
     content: "{{ lua_script.content }}"
     mode: 0644
   notify: Restart Fluentbit service
+  tags:
+    - fluent-bit

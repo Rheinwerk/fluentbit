@@ -28,7 +28,7 @@ You can find more information about each option in the Fluentbit [documentation]
 
 ### Data pipelines configuration
 
-For configuring INPUT, FILTER and OUTPUT section within fluentbit configuration the following variables are used 
+For configuring INPUT, FILTER and OUTPUT section within fluentbit configuration the following variables are used
 
 * **fluentbit_inputs**: Fluentbit INPUT configuration section [default: ""].
 * **fluentbit_filters**: Fluentbit FILTER configuration section [default: ""].
@@ -73,6 +73,18 @@ fluentbit_custom_parsers: |
       Time_Keep False
 ```
 
+### Additional files
+Additional files to copy. Can be used for client authentication.
+
+
+```yml
+fluentbit_extra_files:
+    - name: fluentbit.crt
+      content: |
+        -----BEGIN CERTIFICATE-----
+        ...
+        -----END CERTIFICATE-----
+```
 
 ### Lua filters and lua script support
 
@@ -129,7 +141,7 @@ Example Playbooks
   gather_facts: true
 
   roles:
-    - role: ricsanfre.fluentbit
+    - role: fluentbit
       fluentbit_service_enable_metrics: true
       # lua scripts
       fluentbit_lua_scripts:

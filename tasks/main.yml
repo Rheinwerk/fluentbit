@@ -1,10 +1,96 @@
 ---
-# tasks file for ansible-role-fluentbit
+- name: Install Fluentbit prerequisites
+  ansible.builtin.apt:
+    name: "{{ fluentbit_prerequisites }}"
+    state: present
+  tags:
+    - fluent-bit
 
-# Install fluentbit
-- import_tasks: install.yml
-  tags: ['install']
+- name: Add fluent-bit apt-key
+  ansible.builtin.get_url:
+    url: "{{ fluentbit_apt_key_url }}"
+    dest: "{{ fluentbit_apt_key_path }}"
+    mode: 0644
+  tags:
+    - fluent-bit
 
-# Configure fluentbit
-- import_tasks: configure.yml
-  tags: ['configure']
+- name: Add fluent-bit repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by={{ fluentbit_apt_key_path }}] {{ fluentbit_apt_repos_url }}"
+    filename: fluentbit
+    state: present
+  tags:
+    - fluent-bit
+
+- name: Create required directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: u=rwx,g=rx,o=rx
+  loop:
+    - /var/lib/fluent-bit
+  tags:
+    - fluent-bit
+
+- name: Install fluentbit package
+  ansible.builtin.package:
+    name: "{{ fluentbit_pkg }}"
+    state: present
+    update_cache: true
+  notify: Restart Fluentbit service
+  tags:
+    - fluent-bit
+
+- name: Copy Lua scripts
+  ansible.builtin.include_tasks:
+    file: copy_lua_script.yml
+  loop: "{{ fluentbit_lua_scripts }}"
+  loop_control:
+    loop_var: lua_script
+  when:
+    - fluentbit_lua_scripts is defined
+  tags:
+    - fluent-bit
+
+- name: Source fluent-bit custom parsers conf
+  ansible.builtin.template:
+    src: custom_parsers.conf.j2
+    dest: /etc/fluent-bit/custom_parsers.conf
+    mode: 0644
+    backup: "{{ fluentbit_backup_conf }}"
+  notify: Restart Fluentbit service
+  tags:
+    - fluent-bit
+
+- name: Create additional Fluentbit files
+  ansible.builtin.copy:
+    dest: '/etc/fluent-bit/{{ item.name }}'
+    content: '{{ item.content }}'
+    mode: 0644
+  with_items: '{{ fluentbit_extra_files }}'
+  when: fluentbit_extra_files | length >0
+  no_log: '{{ item.no_log | default(false) }}'
+  notify: Restart Fluentbit service
+  tags:
+    - fluent-bit
+
+- name: Source fluent-bit main conf
+  ansible.builtin.template:
+    src: fluent-bit.conf.j2
+    dest: /etc/fluent-bit/fluent-bit.conf
+    mode: 0644
+    backup: "{{ fluentbit_backup_conf }}"
+    validate: "/opt/fluent-bit/bin/fluent-bit -c %s --dry-run"
+  notify: Restart Fluentbit service
+  tags:
+    - fluent-bit
+
+- name: Ensure fluentbit service is enabled and started
+  ansible.builtin.service:
+    name: "{{ fluentbit_service_name }}"
+    state: started
+    enabled: true
+  tags:
+    - fluent-bit

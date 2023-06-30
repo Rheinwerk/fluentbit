@@ -1,3 +1,16 @@
 ---
+exclude_paths:
+  - .cache/
+  - .github/
+  - .gitlab-ci.yml
+
+parseable: true
+
+offline: true
+
 warn_list:
-  - fqcn-builtins
+  - name[template]
+  - role-name
+  - yaml[line-length]
+  - key-order[task] # additional
+  - no-changed-when

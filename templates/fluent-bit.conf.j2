@@ -20,9 +20,9 @@
     # - trace
     #
     # by default 'info' is set, that means it includes 'error' and 'warning'.
-    log_level    {{ fluentbit_service_log_level }}
+    log_level    info
 
-{% if fluentbit_service_log_file | length > 0 %}
+{% if fluentbit_service_log_file_enable %}
     log_file  {{ fluentbit_service_log_file }}
 {% endif %}
 
@@ -30,7 +30,9 @@
     # ============
     # specify an optional 'Parsers' configuration file
     parsers_file parsers.conf
+{% if fluentbit_custom_parsers | length > 0 %}
     parsers_file custom_parsers.conf
+{% endif %}
 
     # Plugins File
     # ============
@@ -86,15 +88,14 @@
     #
     # storage.backlog.mem_limit 5M
 
-
 {% if fluentbit_inputs | length > 0 %}
 {{ fluentbit_inputs }}
 {% endif %}
 
-{% if fluentbit_outputs | length > 0 %}
-{{ fluentbit_outputs }}
-{% endif %}
-
 {% if fluentbit_filters | length > 0 %}
 {{ fluentbit_filters }}
+{% endif %}
+
+{% if fluentbit_outputs | length > 0 %}
+{{ fluentbit_outputs }}
 {% endif %}
