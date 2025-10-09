@@ -2,6 +2,7 @@
 extends: default
 
 rules:
+  octal-values: {forbid-implicit-octal: true, forbid-explicit-octal: true}
   line-length:
     max: 160
     level: warning
